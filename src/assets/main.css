@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@theme {
+  --animate-move-right: move-right 0.5s ease-in-out forwards;
+  --animate-move-left: move-left 0.5s ease-in-out forwards;
+  --animate-pulse-slow: pulse 1.5s ease-in-out infinite;
+  --animate-spin-slow: spin 2s linear infinite;
+}
+
+@keyframes move-right {
+  0% {
+    left: 0%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes move-left {
+  0% {
+    left: 100%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    left: 0%;
+    opacity: 0;
+  }
+}
