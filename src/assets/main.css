@@ -4,7 +4,8 @@
   --animate-move-right: move-right 0.5s ease-in-out forwards;
   --animate-move-left: move-left 0.5s ease-in-out forwards;
   --animate-pulse-slow: pulse 1.5s ease-in-out infinite;
-  --animate-spin-slow: spin 2s linear infinite;
+  --animate-led-blink-1: led-blink-1 0.6s ease-in-out infinite;
+  --animate-led-blink-2: led-blink-2 0.6s ease-in-out infinite;
 }
 
 @keyframes move-right {
@@ -22,6 +23,16 @@
     left: 100%;
     opacity: 0;
   }
+}
+
+@keyframes led-blink-1 {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.15; }
+}
+
+@keyframes led-blink-2 {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 1; }
 }
 
 @keyframes move-left {

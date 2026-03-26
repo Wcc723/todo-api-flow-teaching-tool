@@ -91,23 +91,45 @@ const lineStyle = computed(() => {
           'bg-gray-700': !rightActive && !isDone && !isError,
         }"
       >
-        <!-- Server SVG -->
+        <!-- Server SVG with LED indicators -->
         <svg
-          class="w-8 h-8 transition-transform duration-300"
+          class="w-8 h-8"
           :class="{
-            'text-yellow-400 animate-spin-slow': props.phase === 'processing',
+            'text-yellow-400': props.phase === 'processing',
             'text-green-400': props.phase === 'responding' || isDone,
             'text-red-400': isError,
             'text-gray-400': !rightActive && !isDone && !isError,
           }"
           fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"
         >
+          <!-- Server rack -->
           <rect x="3" y="2" width="18" height="6" rx="1" />
           <rect x="3" y="10" width="18" height="6" rx="1" />
-          <circle cx="7" cy="5" r="1" fill="currentColor" />
-          <circle cx="7" cy="13" r="1" fill="currentColor" />
-          <line x1="10" y1="5" x2="17" y2="5" />
-          <line x1="10" y1="13" x2="17" y2="13" />
+          <!-- LED indicators -->
+          <circle
+            cx="7" cy="5" r="1"
+            :class="props.phase === 'processing' ? 'animate-led-blink-1' : ''"
+            :fill="props.phase === 'processing' ? '#facc15' : 'currentColor'"
+          />
+          <circle
+            cx="10" cy="5" r="1"
+            :class="props.phase === 'processing' ? 'animate-led-blink-2' : ''"
+            :fill="props.phase === 'processing' ? '#facc15' : 'currentColor'"
+          />
+          <circle
+            cx="7" cy="13" r="1"
+            :class="props.phase === 'processing' ? 'animate-led-blink-2' : ''"
+            :fill="props.phase === 'processing' ? '#facc15' : 'currentColor'"
+          />
+          <circle
+            cx="10" cy="13" r="1"
+            :class="props.phase === 'processing' ? 'animate-led-blink-1' : ''"
+            :fill="props.phase === 'processing' ? '#facc15' : 'currentColor'"
+          />
+          <!-- Rack lines -->
+          <line x1="13" y1="5" x2="17" y2="5" />
+          <line x1="13" y1="13" x2="17" y2="13" />
+          <!-- Base -->
           <line x1="12" y1="18" x2="12" y2="22" />
           <line x1="8" y1="22" x2="16" y2="22" />
         </svg>
