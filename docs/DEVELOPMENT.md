@@ -73,27 +73,58 @@ export const useExampleStore = defineStore('example', () => {
 
 ## API 呼叫規範
 
+所有 API 請求一律透過 `useApiClient` composable 發送，不可直接在元件或 store 中呼叫 `fetch`。
+
+### 使用方式
+
+```typescript
+import { useApiClient } from '@/composables/useApiClient'
+
+const { request } = useApiClient()
+
+// 不需認證
+const res = await request('POST', '/users/sign_in', {
+  body: { email, password },
+  auth: false,
+})
+
+// 需認證（預設 auth: true）
+const res = await request('GET', '/todos/')
+```
+
 ### Base URL
 
 ```typescript
 const API_BASE_URL = 'https://todolist-api.hexschool.io'
 ```
 
+`useApiClient` 內部已定義此常數，外部不需重複定義。
+
 ### 認證請求
 
-需認證的 API 請求須帶 JWT Token：
+`useApiClient` 會自動從 `authStore.token` 取得 JWT Token 並注入 `authorization` header。僅在明確不需認證時傳入 `auth: false`（如登入、註冊 API）。
+
+### 回傳格式
+
+`request()` 回傳 `Promise<ApiResponse<T>>`：
 
 ```typescript
-fetch(`${API_BASE_URL}/todos/`, {
-  headers: {
-    'authorization': token
-  }
-})
+interface ApiResponse<T = unknown> {
+  status: boolean
+  message?: string
+  data?: T
+  [key: string]: unknown
+}
 ```
 
 ### 錯誤處理
 
-API 回傳 `status: false` 時，`message` 欄位包含錯誤訊息，應顯示給使用者。
+- API 回傳 `status: false` 時，`message` 欄位包含錯誤訊息，應顯示給使用者
+- `useApiClient` 內部捕獲 fetch 例外，回傳 `{ status: false, message: '...' }`，不會拋出例外到呼叫端
+
+### apiVisualizer 整合
+
+`useApiClient` 在每次請求中自動觸發 `apiVisualizerStore` 狀態機，開發者無需手動更新視覺化狀態，各 phase 間有 300ms 延遲以便教學展示。
 
 ## 路由規範
 
@@ -113,15 +144,15 @@ const routes = [
 
 需要認證的頁面加上 `meta: { requiresAuth: true }`，並在 `router.beforeEach` 中檢查。
 
-## 目錄結構建議
-
-隨著功能增長，建議的目錄結構：
+## 目錄結構
 
 ```
 src/
-├── assets/          # 靜態資源（圖片、字體、全域 CSS）
-├── components/      # 共用元件
-├── composables/     # 共用 Composables（可複用邏輯）
+├── assets/          # 靜態資源（全域 CSS，Tailwind CSS 4 入口）
+├── components/      # 功能元件，依功能分子目錄
+│   ├── todo/        # Todo 相關元件
+│   └── visualizer/  # API 視覺化相關元件
+├── composables/     # 共用 Composables（如 useApiClient）
 ├── router/          # 路由設定
 ├── stores/          # Pinia Stores
 ├── types/           # TypeScript 型別定義

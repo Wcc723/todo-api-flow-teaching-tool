@@ -15,11 +15,36 @@ vite-todo-sample/
 │   └── favicon.ico             # 靜態 favicon
 ├── src/
 │   ├── main.ts                 # 應用入口：建立 Vue app、註冊 Pinia 和 Router
-│   ├── App.vue                 # 根元件（目前為初始模板）
+│   ├── App.vue                 # 根元件（僅包含 <RouterView />）
+│   ├── assets/
+│   │   └── main.css            # 全域樣式：Tailwind CSS 4 入口 + 自訂動畫 keyframes
+│   ├── types/                  # TypeScript 型別定義
+│   │   ├── todo.ts             # Todo、CreateTodoPayload、UpdateTodoPayload
+│   │   ├── auth.ts             # LoginPayload、SignUpPayload、LoginResponse、SignUpResponse、CheckoutResponse
+│   │   └── api.ts              # ApiRequestPhase、ApiRequestInfo、ApiResponse
+│   ├── composables/            # 共用可組合邏輯
+│   │   └── useApiClient.ts     # 封裝 fetch + 300ms 延遲 + apiVisualizer 狀態機觸發
+│   ├── stores/                 # Pinia 狀態管理
+│   │   ├── auth.ts             # 認證狀態：token、nickname、login/signUp/checkToken/logout
+│   │   ├── todo.ts             # 待辦狀態：todos、fetchTodos/addTodo/updateTodo/deleteTodo/toggleTodo
+│   │   └── apiVisualizer.ts    # API 請求狀態機：currentRequest、history、phase 轉換
 │   ├── router/
-│   │   └── index.ts            # Vue Router 設定（createWebHistory，routes 目前為空）
-│   └── stores/
-│       └── counter.ts          # Pinia store 範例（counter，含 count、doubleCount、increment）
+│   │   └── index.ts            # 路由設定：/login、/todo（requiresAuth）、beforeEach 守衛
+│   ├── views/                  # 頁面級元件
+│   │   ├── LoginView.vue       # 登入/註冊頁面（含 Tab 切換）
+│   │   └── TodoView.vue        # 主頁面（左右分欄：TodoPanel + ApiVisualizerPanel）
+│   └── components/
+│       ├── todo/               # Todo 功能元件
+│       │   ├── TodoPanel.vue   # Todo 面板容器（含 Header、新增、列表）
+│       │   ├── TodoInput.vue   # 新增待辦輸入框
+│       │   ├── TodoList.vue    # 待辦列表（含全部/待完成/已完成篩選 Tab）
+│       │   └── TodoItem.vue    # 單筆待辦項目（含行內編輯、切換狀態、刪除）
+│       └── visualizer/         # API 視覺化元件
+│           ├── ApiVisualizerPanel.vue  # 視覺化面板容器（深色背景，組合子元件）
+│           ├── EndpointDisplay.vue     # 顯示當前 API endpoint（method badge + path + baseUrl）
+│           ├── StatusIndicator.vue     # 顯示目前 phase 狀態（含動畫 dot）
+│           ├── RequestAnimation.vue    # 瀏覽器↔伺服器連線動畫（封包移動效果）
+│           └── RequestHistory.vue      # 最近 20 筆請求紀錄（method、path、狀態碼、耗時）
 ├── docs/
 │   ├── swagger_output.json     # 六角學院 TodoList API Swagger 2.0 文件
 │   ├── README.md               # 項目介紹與快速開始
@@ -29,6 +54,7 @@ vite-todo-sample/
 │   ├── TESTING.md              # 測試規範
 │   ├── CHANGELOG.md            # 更新日誌
 │   └── plans/                  # 開發計畫
+│       ├── 2026-03-26-todo-api-teaching-tool.md  # 待歸檔計畫
 │       └── archive/            # 已完成計畫歸檔
 └── .vscode/
     ├── extensions.json         # 推薦 VS Code 擴充套件
@@ -42,34 +68,91 @@ vite-todo-sample/
    - `createApp(App)` 建立 Vue 應用實例
    - `app.use(createPinia())` 註冊 Pinia 狀態管理
    - `app.use(router)` 註冊 Vue Router
+   - `import './assets/main.css'` 載入 Tailwind CSS 4
    - `app.mount('#app')` 掛載至 DOM
-3. **`src/App.vue`** — 根元件，使用 `<script setup lang="ts">` + `<template>` + `<style scoped>` 結構
-4. **`src/router/index.ts`** — 使用 `createWebHistory` 模式，routes 陣列目前為空（待開發）
-5. **`src/stores/counter.ts`** — Pinia store 範例，使用 Composition API 風格（`defineStore` + setup function）
+3. **`src/App.vue`** — 根元件，僅包含 `<RouterView />`，路由決定渲染哪個 View
+4. **`src/router/index.ts`** — 使用 `createWebHistory` 模式：
+   - `/` 重新導向至 `/todo`
+   - `/login` → `LoginView.vue`（公開頁面）
+   - `/todo` → `TodoView.vue`（需認證，`meta.requiresAuth: true`）
+   - `router.beforeEach`：未登入訪問 `/todo` 導向 `/login`；已登入訪問 `/login` 導向 `/todo`
+5. **`src/views/TodoView.vue`** — 主頁面，渲染左右兩欄：`TodoPanel`（待辦操作）和 `ApiVisualizerPanel`（API 監控）
 
 ## 資料流架構
 
+### 整體架構
+
 ```
-[Vue 元件] <--雙向綁定--> [Pinia Store] --HTTP 請求--> [六角學院 TodoList API]
-                                                              |
-                                                        JWT Token 認證
-                                                    (header: authorization)
+[Vue 元件 / Views]
+       |
+       | 呼叫 store action
+       v
+[Pinia Stores]                        [apiVisualizer store]
+  auth.ts                                     ^
+  todo.ts                                     | 狀態機更新
+       |                                      |
+       | 呼叫 composable                       |
+       v                                      |
+[useApiClient composable] ──────────────────>─┘
+       |
+       | 1. startRequest → phase: sending → delay 300ms
+       | 2. fetch() 發出 HTTP 請求 → phase: processing → delay 300ms
+       | 3. res.json() 解析回應 → phase: responding → delay 300ms
+       | 4. completeRequest / failRequest → phase: done / error
+       v
+[六角學院 TodoList API]
+https://todolist-api.hexschool.io
+(JWT 認證：header authorization)
 ```
 
 ### 資料流說明
 
-1. **元件層（Views/Components）**：負責 UI 渲染與使用者互動，透過 Pinia store 存取資料
-2. **狀態管理層（Pinia Stores）**：集中管理應用狀態，處理業務邏輯，發送 API 請求
-3. **API 層**：與六角學院 TodoList API 通訊，所有需認證的請求須帶 JWT Token
+1. **元件層（Views/Components）**：負責 UI 渲染與使用者互動。呼叫 Pinia store 的 action，不直接發 API 請求
+2. **狀態管理層（Pinia Stores）**：
+   - `auth.ts`：管理登入狀態，token 持久化至 localStorage
+   - `todo.ts`：管理待辦列表，CRUD 操作完成後重新呼叫 `fetchTodos()` 同步資料
+   - `apiVisualizer.ts`：管理 API 請求的即時狀態，供視覺化面板讀取
+3. **Composable 層（useApiClient）**：統一的 HTTP 請求入口，負責：
+   - 注入 JWT Token 到 request header
+   - 以 300ms 延遲驅動 apiVisualizer 狀態機轉換
+   - 捕獲錯誤並回傳統一格式 `ApiResponse`
+4. **視覺化層（ApiVisualizerPanel）**：訂閱 `apiVisualizerStore`，即時反映每次 API 請求的生命週期
+
+### apiVisualizer 狀態機
+
+每次 API 請求依序經歷以下 phase 轉換：
+
+```
+idle
+ |
+ | startRequest() ── useApiClient 呼叫
+ v
+sending         ← 封包從瀏覽器往伺服器移動（動畫）
+ | delay 300ms
+ v
+processing      ← 伺服器圖示旋轉（fetch 進行中）
+ | delay 300ms
+ v
+responding      ← 封包從伺服器往瀏覽器移動（動畫）
+ | delay 300ms
+ v
+done            ← 顯示回應內容，寫入 history
+  \
+   error        ← 發生例外，顯示錯誤訊息，寫入 history
+```
+
+history 保留最近 20 筆紀錄，每筆包含：method、path、HTTP status code、耗時（ms）
 
 ### 認證流程
 
 ```
-使用者登入 → POST /users/sign_in → 取得 token + exp
-         → 儲存 token 至 store/localStorage
-         → 後續 API 請求帶 authorization header
-         → Token 過期或登出 → POST /users/sign_out → 清除 token
+使用者登入 → POST /users/sign_in → 取得 token
+          → token 儲存至 authStore.token + localStorage('todo_token')
+          → 後續 API 請求由 useApiClient 自動帶入 authorization header
+          → 登出 → POST /users/sign_out → clearAuth() 清除 store + localStorage
 ```
+
+路由守衛在 `router.beforeEach` 中檢查 `authStore.isLoggedIn`（`computed(() => !!token.value)`），不需主動呼叫 `checkToken()`。`checkToken()` 可在需要驗證 token 有效性時手動呼叫。
 
 ## 外部 API 總覽
 
@@ -116,7 +199,7 @@ Base URL：`https://todolist-api.hexschool.io`
 
 ```typescript
 interface Todo {
-  id: string        // 待辦事項唯一 ID
+  id: string         // 待辦事項唯一 ID
   createTime: number // 建立時間（Unix timestamp）
   content: string    // 待辦事項內容
   status: boolean    // 完成狀態（false=未完成，true=已完成）
@@ -143,3 +226,16 @@ interface Todo {
   - `noUncheckedIndexedAccess: true` — 陣列/物件存取額外安全檢查
   - `paths: { "@/*": ["./src/*"] }` — path alias
 - **tsconfig.node.json**：Node 環境設定（`vite.config.ts` 等建構工具檔案用）
+
+## Tailwind CSS 4 設定
+
+使用 Tailwind CSS 4 的 `@import "tailwindcss"` 方式引入，無需 `tailwind.config.js`。
+
+自訂動畫定義於 `src/assets/main.css` 的 `@theme` 區塊：
+
+| 動畫名稱 | 用途 |
+|----------|------|
+| `animate-move-right` | 封包從瀏覽器移向伺服器（sending phase） |
+| `animate-move-left` | 封包從伺服器移回瀏覽器（responding phase） |
+| `animate-pulse-slow` | 緩慢脈衝（備用） |
+| `animate-spin-slow` | 伺服器圖示旋轉（processing phase） |
