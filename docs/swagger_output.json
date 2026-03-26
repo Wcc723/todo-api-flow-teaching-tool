@@ -1,0 +1,723 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "六角學院 - TodoList API",
+    "description": "六角學院 TodoList 課程練習用 API - 「資料會在每日凌晨 1:15 清除」"
+  },
+  "host": "todolist-api.hexschool.io",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "使用者",
+      "description": ""
+    },
+    {
+      "name": "代辦事項",
+      "description": ""
+    }
+  ],
+  "schemes": [
+    "https",
+    "http"
+  ],
+  "securityDefinitions": {
+    "apiKeyAuth": {
+      "type": "apiKey",
+      "in": "header",
+      "name": "authorization",
+      "description": "JWT Token"
+    }
+  },
+  "paths": {
+    "/users/sign_up": {
+      "post": {
+        "tags": [
+          "使用者"
+        ],
+        "description": "註冊帳號",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "description": "註冊帳號所需欄位",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "example": "example@gmail.com"
+                },
+                "password": {
+                  "type": "string",
+                  "example": "example"
+                },
+                "nickname": {
+                  "type": "string",
+                  "example": "example"
+                }
+              },
+              "required": [
+                "email",
+                "password",
+                "nickname"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "註冊成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "uid": {
+                  "type": "string",
+                  "example": "example"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "用戶已存在",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "用戶已存在"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        },
+        "security": [
+          {}
+        ]
+      }
+    },
+    "/users/sign_in": {
+      "post": {
+        "tags": [
+          "使用者"
+        ],
+        "description": "登入帳號",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "description": "登入帳號所需欄位",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "example": "example@gmail.com"
+                },
+                "password": {
+                  "type": "string",
+                  "example": "example"
+                }
+              },
+              "required": [
+                "email",
+                "password"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "登入成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "exp": {
+                  "type": "number",
+                  "example": 1234567890
+                },
+                "token": {
+                  "type": "string",
+                  "example": "example"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "欄位驗證失敗",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "欄位驗證失敗"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "401": {
+            "description": "帳號密碼驗證錯誤",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "帳號密碼驗證錯誤"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "用戶不存在",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "用戶不存在"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        },
+        "security": [
+          {}
+        ]
+      }
+    },
+    "/users/checkout": {
+      "get": {
+        "tags": [
+          "使用者"
+        ],
+        "description": "檢查 Token 是否有效",
+        "responses": {
+          "200": {
+            "description": "Token 有效",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "uid": {
+                  "type": "string",
+                  "example": "example"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Token 無效",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "該 Token 不存在"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/users/sign_out": {
+      "post": {
+        "tags": [
+          "使用者"
+        ],
+        "description": "登出帳號",
+        "responses": {
+          "200": {
+            "description": "登出成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "message": {
+                  "type": "string",
+                  "example": "登出成功"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "登出失敗",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "登出失敗"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/todos/": {
+      "get": {
+        "tags": [
+          "代辦事項"
+        ],
+        "description": "取得所有代辦事項",
+        "responses": {
+          "200": {
+            "description": "取得成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "example": "123456789"
+                      },
+                      "createTime": {
+                        "type": "number",
+                        "example": 1620281234
+                      },
+                      "content": {
+                        "type": "string",
+                        "example": "買晚餐"
+                      },
+                      "status": {
+                        "type": "boolean",
+                        "example": false
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "取得失敗",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "取得失敗"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "代辦事項"
+        ],
+        "description": "新增代辦事項",
+        "parameters": [
+          {
+            "name": "content",
+            "in": "body",
+            "description": "代辦事項內容",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "string",
+                  "example": "買晚餐"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "新增成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "newTodo": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "123456789"
+                    },
+                    "createTime": {
+                      "type": "number",
+                      "example": 1620281234
+                    },
+                    "content": {
+                      "type": "string",
+                      "example": "買晚餐"
+                    },
+                    "status": {
+                      "type": "boolean",
+                      "example": false
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "新增失敗",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "新增失敗"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/todos/{id}": {
+      "put": {
+        "tags": [
+          "代辦事項"
+        ],
+        "description": "更新代辦事項",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "代辦事項 ID",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "example": "123456789"
+                }
+              }
+            }
+          },
+          {
+            "name": "content",
+            "in": "body",
+            "description": "代辦事項內容",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "string",
+                  "example": "買晚餐"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "message": {
+                  "type": "string",
+                  "example": "更新成功"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "更新失敗",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "更新失敗"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "代辦事項"
+        ],
+        "description": "刪除代辦事項",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "代辦事項 ID",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "example": "123456789"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "刪除成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "message": {
+                  "type": "string",
+                  "example": "刪除成功"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "刪除失敗",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "刪除失敗"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/todos/{id}/toggle": {
+      "patch": {
+        "tags": [
+          "代辦事項"
+        ],
+        "description": "切換代辦事項狀態",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "代辦事項 ID",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "example": "123456789"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "狀態更新成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "message": {
+                  "type": "string",
+                  "example": "狀態更新成功"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "狀態更新失敗",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "狀態更新失敗"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
+      }
+    }
+  }
+}
