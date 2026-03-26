@@ -40,3 +40,4 @@ tools:
 - 每次 commit 保持單一職責
 - 不使用 `--no-verify` 跳過 hooks
 - 不使用 `git push`，僅執行 commit
+- Commit message 不加入 Co-Authored-By
