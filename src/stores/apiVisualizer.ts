@@ -5,6 +5,9 @@ import type { ApiRequestInfo, ApiRequestPhase } from '@/types/api'
 export const useApiVisualizerStore = defineStore('apiVisualizer', () => {
   const currentRequest = ref<ApiRequestInfo | null>(null)
   const history = ref<ApiRequestInfo[]>([])
+  const slowMode = ref(false)
+
+  const phaseDelay = computed(() => slowMode.value ? 500 : 300)
 
   const isActive = computed(() =>
     currentRequest.value !== null &&
@@ -63,6 +66,8 @@ export const useApiVisualizerStore = defineStore('apiVisualizer', () => {
   return {
     currentRequest,
     history,
+    slowMode,
+    phaseDelay,
     isActive,
     startRequest,
     setPhase,

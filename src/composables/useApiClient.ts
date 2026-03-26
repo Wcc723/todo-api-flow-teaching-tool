@@ -24,7 +24,8 @@ export function useApiClient() {
       baseUrl: API_BASE_URL,
       body: options?.body,
     })
-    await delay(300)
+    const ms = visualizer.phaseDelay
+    await delay(ms)
 
     try {
       // Phase: processing (request in flight)
@@ -45,12 +46,12 @@ export function useApiClient() {
 
       visualizer.setPhase('processing')
       const res = await fetch(`${API_BASE_URL}${path}`, fetchOptions)
-      await delay(300)
+      await delay(ms)
 
       // Phase: responding
       visualizer.setPhase('responding')
       const data = await res.json()
-      await delay(300)
+      await delay(ms)
 
       // Phase: done
       visualizer.completeRequest({ status: res.status, data })

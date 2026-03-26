@@ -7,12 +7,26 @@ import RequestAnimation from './RequestAnimation.vue'
 import RequestHistory from './RequestHistory.vue'
 
 const store = useApiVisualizerStore()
-const { currentRequest, history } = storeToRefs(store)
+const { currentRequest, history, slowMode } = storeToRefs(store)
 </script>
 
 <template>
   <div class="flex flex-col h-full bg-gray-900 rounded-xl p-6 text-white">
-    <h2 class="text-lg font-bold text-gray-200 mb-6">API 運作監控</h2>
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-lg font-bold text-gray-200">API 運作監控</h2>
+      <label class="flex items-center gap-2 cursor-pointer select-none">
+        <span class="text-xs text-gray-400">慢速模式</span>
+        <div class="relative">
+          <input
+            v-model="slowMode"
+            type="checkbox"
+            class="sr-only peer"
+          />
+          <div class="w-9 h-5 bg-gray-700 rounded-full peer-checked:bg-amber-500 transition-colors" />
+          <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4" />
+        </div>
+      </label>
+    </div>
 
     <!-- Endpoint 資訊 -->
     <div class="mb-4">
